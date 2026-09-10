@@ -603,7 +603,7 @@
       '<div class="pr-stat"><span class="l">BMI screening estimate</span><span class="v">' + m.bmi + ' (' + escHtml(m.bmiCat) + ')</span></div>' +
       '<div class="pr-stat"><span class="l">Estimated maintenance</span><span class="v">' + m.tdee + ' kcal</span></div>' +
       '<div class="pr-stat"><span class="l">Estimated daily target</span><span class="v">' + m.target + ' kcal</span></div>' +
-      '<div class="pr-stat"><span class="l">Planned weekly change</span><span class="v">' + (m.pace ? m.pace + ' kg/wk' : 'Maintenance') + '</span></div>' +
+      '<div class="pr-stat"><span class="l">Planned weekly change</span><span class="v">' + escHtml(m.changeLabel) + '</span></div>' +
       '<div class="pr-stat" style="grid-column:1 / -1;"><span class="l">Macro planning guide</span><span class="v">Protein ' + lastMacros.p + 'g · Carbs ' + lastMacros.c + 'g · Fat ' + lastMacros.f + 'g</span></div>' +
       '</div>';
 
@@ -652,7 +652,7 @@
       });
     });
 
-    html += '<p class="pr-foot">For adults 18+. BMI is a screening estimate, not a diagnosis. Maintenance calories use the Mifflin–St Jeor equation plus a selected activity factor; actual needs vary. Meal nutrition is estimated from the built-in recipe set and will vary by brand, cooked yield and preparation. The planner does not generate targets below 1,200 kcal/day for women or 1,500 kcal/day for men, but those limits do not establish medical safety for an individual. Halal and kosher tags describe ingredient screening only, not certification. Consult a qualified clinician or dietitian for individual advice.</p>';
+    html += '<p class="pr-foot">For adults 18+. BMI is a screening estimate, not a diagnosis. Weight-loss targets cannot go below BMI 18.5 and weight-gain targets cannot go above BMI 24.9 in this general planner. Maintenance calories use the Mifflin–St Jeor equation plus a selected activity factor; actual needs vary. Loss plans use an estimated calorie deficit and gain plans use an estimated surplus capped at 20% of maintenance or 500 kcal/day, whichever is lower. Scale-weight change is not linear and may reflect water, fat and lean tissue. Meal nutrition is estimated from the built-in recipe set and will vary by brand, cooked yield and preparation. The planner does not generate loss targets below 1,200 kcal/day for women or 1,500 kcal/day for men, but those limits do not establish medical safety for an individual. Halal and kosher tags describe ingredient screening only, not certification. Consult a qualified clinician or dietitian for individual advice.</p>';
 
     html += '<div class="pr-foot-brand">All rights reserved.</div>';
 
@@ -823,36 +823,57 @@
     var heightM = heightCm/100;
     var targetBmi = targetKg / (heightM*heightM);
     var tdee = tdeeFor(weightKg, heightCm, age, activity);
-    var kgToLose = weightKg - targetKg;
+    var deltaKg = targetKg - weightKg;
+    var goal = Math.abs(deltaKg) < 0.05 ? "maintain" : (deltaKg > 0 ? "gain" : "loss");
+    var changeKg = Math.abs(deltaKg);
     var targetWarnEl = $("target-warn");
-    if (kgToLose < 0){
-      targetWarnEl.hidden = true;
-      setFormError("step2-error", "This version creates weight-loss or maintenance plans only. Enter a target at or below your current weight.");
-      $("results").hidden = true;
-      return;
-    }
-    if (targetBmi < 18.5){
+    if (goal === "loss" && targetBmi < 18.5){
       targetWarnEl.hidden = true;
       setFormError("step2-error", "That target is below the general adult BMI reference range. Choose at least " + round1(18.5 * heightM * heightM) + " kg, or ask a qualified clinician or dietitian for an individual plan.");
       $("results").hidden = true;
       return;
     }
+    if (goal === "gain" && targetBmi > 24.9){
+      targetWarnEl.hidden = true;
+      setFormError("step2-error", "That gain target is above the general adult healthy BMI reference range. Choose no more than " + round1(24.9 * heightM * heightM) + " kg, or ask a qualified clinician or dietitian for an individual plan.");
+      $("results").hidden = true;
+      return;
+    }
 
-    // 1 kg fat ≈ 7700 kcal
-    var dailyDeficit = kgToLose===0 ? 0 : (pace * 7700) / 7;
+    // Pace-to-energy conversion is only a planning estimate; real weight change is not linear.
+    var requestedDailyChange = (pace * 7700) / 7;
     var floor = sex==="m" ? 1500 : 1200;
-    var targetKcal = Math.max(floor, tdee - dailyDeficit);
-    var actualDeficit = tdee - targetKcal;
-    var cappedNote = actualDeficit < dailyDeficit - 5;
+    var gainSurplusLimit = Math.min(500, tdee * 0.20);
+    var appliedChange = 0;
+    var targetKcal = tdee;
+    var cappedNote = false;
 
-    var weeks = kgToLose > 0 && actualDeficit > 0
-      ? (kgToLose * 7700) / (actualDeficit * 7)
+    if (goal === "loss"){
+      targetKcal = Math.max(floor, tdee - requestedDailyChange);
+      appliedChange = tdee - targetKcal;
+      cappedNote = appliedChange < requestedDailyChange - 5;
+    } else if (goal === "gain"){
+      appliedChange = Math.min(requestedDailyChange, gainSurplusLimit);
+      targetKcal = tdee + appliedChange;
+      cappedNote = appliedChange < requestedDailyChange - 5;
+    }
+
+    var weeks = changeKg > 0 && appliedChange > 0
+      ? (changeKg * 7700) / (appliedChange * 7)
       : 0;
 
-    // General adult planning guide within AMDR: 25% protein, 45% carbohydrate, 30% fat.
-    var proteinG = Math.round((targetKcal*0.25)/4);
-    var carbsG = Math.round((targetKcal*0.45)/4);
-    var fatG = Math.round((targetKcal*0.30)/9);
+    // Goal-specific planning guides remain within the adult AMDR ranges.
+    var macroRatios = goal === "loss"
+      ? {p:0.30, c:0.45, f:0.25}
+      : goal === "gain"
+        ? {p:0.25, c:0.50, f:0.25}
+        : {p:0.25, c:0.45, f:0.30};
+    var proteinG = Math.round((targetKcal*macroRatios.p)/4);
+    var carbsG = Math.round((targetKcal*macroRatios.c)/4);
+    var fatG = Math.round((targetKcal*macroRatios.f)/9);
+    var goalLabel = goal === "gain" ? "Weight gain" : (goal === "loss" ? "Weight loss" : "Maintenance");
+    var effectivePace = appliedChange > 0 ? Math.round(((appliedChange * 7) / 7700) * 100) / 100 : 0;
+    var changeLabel = goal === "maintain" ? "Maintenance" : goalLabel + " · ~" + effectivePace + " kg/wk";
 
     lastTargetKcal = targetKcal;
     lastMacros = {p:proteinG, c:carbsG, f:fatG};
@@ -862,29 +883,38 @@
       tdee: Math.round(tdee).toLocaleString(),
       target: Math.round(targetKcal).toLocaleString(),
       weeks: weeks > 0 ? Math.ceil(weeks) : null,
-      pace: kgToLose===0 ? null : pace
+      pace: goal === "maintain" ? null : pace,
+      goal: goal,
+      changeLabel: changeLabel
     };
 
     // ---- render step 2 dashboard ----
     $("stat-tdee2").textContent = Math.round(tdee).toLocaleString() + " kcal";
-    $("stat-pace").textContent = kgToLose===0 ? "Maintenance" : pace + " kg/wk";
+    $("stat-pace").textContent = changeLabel;
     $("stat-target").textContent = Math.round(targetKcal).toLocaleString() + " kcal";
     $("stat-weeks").textContent = weeks > 0 ? Math.ceil(weeks) + " wk" : "—";
 
     $("macro-p").textContent = proteinG;
     $("macro-c").textContent = carbsG;
     $("macro-f").textContent = fatG;
+    $("macro-guide-note").textContent = goalLabel + " macro guide (" + Math.round(macroRatios.p*100) + "% protein / " + Math.round(macroRatios.c*100) + "% carbohydrate / " + Math.round(macroRatios.f*100) + "% fat); generated meals show their estimated actual average.";
 
     $("stat-current-w").textContent = round1(weightKg) + " kg";
     $("stat-target-w").textContent = round1(targetKg) + " kg";
     $("stat-target-bmi").textContent = targetBmi.toFixed(1) + " (" + classifyBMI(targetBmi).label + ")";
 
-    if (kgToLose === 0){
+    if (goal === "maintain"){
       targetWarnEl.hidden = false;
       targetWarnEl.innerHTML = "<strong>Maintenance plan —</strong> your target equals your current weight, so no calorie deficit was applied.";
-    } else if (cappedNote){
+    } else if (goal === "loss" && cappedNote){
       targetWarnEl.hidden = false;
       targetWarnEl.innerHTML = "<strong>Pace capped —</strong> your requested deficit would drop intake below this planner’s lower limit (" + floor + " kcal/day), so the estimate was raised to that limit. This limit is not an individual medical-safety determination.";
+    } else if (goal === "gain" && cappedNote){
+      targetWarnEl.hidden = false;
+      targetWarnEl.innerHTML = "<strong>Gain pace adjusted —</strong> this plan adds about " + Math.round(appliedChange) + " kcal/day above estimated maintenance, capped at 20% of maintenance or 500 kcal/day, whichever is lower. Actual gain and body composition vary.";
+    } else if (goal === "gain"){
+      targetWarnEl.hidden = false;
+      targetWarnEl.innerHTML = "<strong>Weight-gain plan —</strong> this estimate adds about " + Math.round(appliedChange) + " kcal/day above maintenance. Actual gain and body composition vary; resistance training and qualified guidance can help align the plan with a muscle-gain goal.";
     } else {
       targetWarnEl.hidden = true;
     }

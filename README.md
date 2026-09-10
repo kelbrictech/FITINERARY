@@ -7,7 +7,7 @@ Fitinerary computes an adult BMI screening estimate and BMI reference-weight ran
 ## Features
 
 - **Step 1 — Your numbers.** Adults enter age, sex, activity level, height, and weight (metric and imperial fields stay synchronized). The app reports BMI as a screening estimate and translates the adult BMI reference range to the entered height.
-- **Step 2 — Your target.** Set a weight-loss or maintenance target and weekly pace. Fitinerary estimates resting energy with the Mifflin–St Jeor equation, applies the selected activity factor, and clearly labels the result as an estimate. This general-purpose version does not generate a target above the current weight or below the adult BMI reference range.
+- **Step 2 — Your target.** Set a target weight and weekly pace. Fitinerary infers weight loss, maintenance, or weight gain from that target, estimates resting energy with the Mifflin–St Jeor equation, applies the selected activity factor, and adapts calories and macros for the goal. As a general adult safeguard, loss targets cannot go below BMI 18.5 and gain targets cannot go above BMI 24.9. Weight-gain estimates also use a conservative surplus cap; all results are clearly labeled as estimates.
 - **7-day, 21-meal plan.** Meals are pulled from a built-in recipe set spanning Western, Asian, Philippine (PH local), Halal, and Kosher options, with a seafood-free filter. A daily optimizer selects and scales meals toward both the calorie target and a general macro planning guide.
 - **Recipe guide.** Every planned meal includes its exact portion multiplier and scaled ingredient quantities matching the nutrition displayed for that meal.
 - **Grocery list.** Measured quantities are mathematically aggregated across all 21 scaled portions, including repeats. Unmeasured ingredients are honestly marked "as needed."
@@ -58,7 +58,7 @@ No build step is needed — `server.js` and `package.json` are not used by Pages
 
 ## Disclaimer
 
-Fitinerary is a planning aid, not medical or religious dietary advice. Halal and kosher tags reflect ingredient choice only — they are not certified and do not account for preparation method. Consult a clinician before starting a weight-loss program.
+Fitinerary is a planning aid, not medical or religious dietary advice. Halal and kosher tags reflect ingredient choice only — they are not certified and do not account for preparation method. Consult a qualified clinician or dietitian before starting a weight-change program.
 
 ---
 
