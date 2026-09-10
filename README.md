@@ -7,11 +7,12 @@ Fitinerary computes an adult BMI screening estimate and BMI reference-weight ran
 ## Features
 
 - **Step 1 — Your numbers.** Adults enter age, sex, activity level, height, and weight (metric and imperial fields stay synchronized). The app reports BMI as a screening estimate and translates the adult BMI reference range to the entered height.
-- **Step 2 — Your target.** Set a weight-loss or maintenance target and weekly pace. Fitinerary estimates resting energy with the Mifflin–St Jeor equation, applies the selected activity factor, and clearly labels the result as an estimate.
+- **Step 2 — Your target.** Set a weight-loss or maintenance target and weekly pace. Fitinerary estimates resting energy with the Mifflin–St Jeor equation, applies the selected activity factor, and clearly labels the result as an estimate. This general-purpose version does not generate a target above the current weight or below the adult BMI reference range.
 - **7-day, 21-meal plan.** Meals are pulled from a built-in recipe set spanning Western, Asian, Philippine (PH local), Halal, and Kosher options, with a seafood-free filter. A daily optimizer selects and scales meals toward both the calorie target and a general macro planning guide.
 - **Recipe guide.** Every planned meal includes its exact portion multiplier and scaled ingredient quantities matching the nutrition displayed for that meal.
 - **Grocery list.** Measured quantities are mathematically aggregated across all 21 scaled portions, including repeats. Unmeasured ingredients are honestly marked "as needed."
-- **PDF export.** Generates a real, downloadable PDF (via jsPDF + html2canvas) laid out for mobile/phone-width reading — no print dialog involved.
+- **PDF export.** Generates a real, downloadable PDF (via jsPDF + html2canvas) laid out for mobile/phone-width reading — no print dialog involved. The button now shows visible progress plus inline success or recovery guidance.
+- **Focused three-step flow.** Each stage has one dominant action. Later stages stay hidden until relevant, while units, activity, cuisine filters, regeneration, and editing remain available as secondary disclosed options.
 
 ## Project structure
 

@@ -15,13 +15,28 @@
 
   <div class="masthead">
     <div>
-      <p class="brand-eyebrow">Fitinerary — your personal diet planner</p>
-      <h1>Fitinerary</h1>
-      <p>Step one: get your BMI and a recommended weight range. Step two: set a target and generate the 7-day plan.</p>
+      <h1><span class="brand-fit">Fit</span><span class="brand-inerary">inerary</span></h1>
+      <p class="brand-subtitle">Your personal diet planner</p>
     </div>
   </div>
 
-  <div class="intake">
+  <div class="masthead-brand" aria-label="Created by KELBRIC Technologies">
+    <a class="kelbric-github" href="https://github.com/kelbrictech" target="_blank" rel="noopener noreferrer" aria-label="KELBRIC Technologies on GitHub">KELBRIC TECHNOLOGIES</a>
+    <i aria-hidden="true">·</i>
+    <a href="https://facebook.com/thetechnaitive" target="_blank" rel="noopener noreferrer">FB: @thetechnaitive</a>
+    <i aria-hidden="true">·</i>
+    <a href="mailto:kelbrictech@gmail.com">kelbrictech@gmail.com</a>
+  </div>
+
+  <div class="progress-track" aria-label="Fitinerary progress">
+    <div class="progress-step active" data-progress="1" aria-current="step"><span>1</span><b>Your numbers</b></div>
+    <div class="progress-line" aria-hidden="true"></div>
+    <div class="progress-step" data-progress="2"><span>2</span><b>Your target</b></div>
+    <div class="progress-line" aria-hidden="true"></div>
+    <div class="progress-step" data-progress="3"><span>3</span><b>Meal plan</b></div>
+  </div>
+
+  <div class="intake" id="step1-card">
     <div class="step-label"><span class="step-num">1</span> Your numbers</div>
 
     <div class="intake-grid">
@@ -32,51 +47,77 @@
       <div class="field">
         <label>Sex <span class="hint">for BMR calc</span></label>
         <div class="sex-pair">
-          <button type="button" id="sex-m" class="active">Male</button>
-          <button type="button" id="sex-f">Female</button>
-        </div>
-      </div>
-      <div class="field">
-        <label for="activity">Activity level</label>
-        <select id="activity">
-          <option value="1.2">Sedentary — desk job, little exercise</option>
-          <option value="1.375" selected>Light — exercise 1–3 days/wk</option>
-          <option value="1.55">Moderate — exercise 3–5 days/wk</option>
-          <option value="1.725">Active — exercise 6–7 days/wk</option>
-          <option value="1.9">Very active — physical job + training</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="dual-unit-row">
-      <div class="field">
-        <label for="height-cm">Height <span class="hint">cm</span></label>
-        <input type="number" id="height-cm" value="171" min="90" max="230" step="0.1" inputmode="decimal">
-      </div>
-      <div class="field dual-pair">
-        <label>Height <span class="hint">ft / in</span></label>
-        <div class="dual-pair-inputs">
-          <input type="number" id="height-ft" value="5" min="2" max="7" inputmode="numeric">
-          <input type="number" id="height-in" value="7" min="0" max="11" inputmode="numeric">
+          <button type="button" id="sex-m" class="active" aria-pressed="true">Male</button>
+          <button type="button" id="sex-f" aria-pressed="false">Female</button>
         </div>
       </div>
     </div>
 
-    <div class="dual-unit-row">
+    <div class="primary-measures">
       <div class="field">
-        <label for="weight-kg">Current weight <span class="hint">kg</span></label>
-        <input type="number" id="weight-kg" value="82" min="20" max="250" step="0.1" inputmode="decimal">
+        <div class="field-label-row">
+          <label for="height-cm">Height <span class="hint" id="height-unit-label">cm</span></label>
+          <button class="inline-unit-toggle" id="height-unit-toggle" type="button" aria-pressed="false">Use ft/in</button>
+        </div>
+        <div id="height-metric-wrap">
+          <input type="number" id="height-cm" value="171" min="90" max="230" step="0.1" inputmode="decimal">
+        </div>
+        <div class="dual-pair-inputs" id="height-imperial-wrap" hidden>
+          <input type="number" id="height-ft" value="5" min="2" max="7" inputmode="numeric" aria-label="Height in feet">
+          <input type="number" id="height-in" value="7" min="0" max="11" inputmode="numeric" aria-label="Additional height in inches">
+        </div>
       </div>
       <div class="field">
-        <label for="weight-lb">Current weight <span class="hint">lb</span></label>
-        <input type="number" id="weight-lb" value="181" min="44" max="550" step="0.1" inputmode="decimal">
+        <div class="field-label-row">
+          <label for="weight-kg">Current weight <span class="hint" id="weight-unit-label">kg</span></label>
+          <button class="inline-unit-toggle" id="weight-unit-toggle" type="button" aria-pressed="false">Use lb</button>
+        </div>
+        <div id="weight-metric-wrap">
+          <input type="number" id="weight-kg" value="82" min="20" max="250" step="0.1" inputmode="decimal">
+        </div>
+        <div id="weight-imperial-wrap" hidden>
+          <input type="number" id="weight-lb" value="181" min="44" max="551.2" step="0.1" inputmode="decimal" aria-label="Current weight in pounds">
+        </div>
       </div>
     </div>
 
-    <button class="calc-btn" id="step1-btn" type="button">Compute BMI &amp; recommended weight</button>
+    <div class="activity-section">
+      <div class="activity-heading">
+        <span>Activity level</span>
+        <span class="hint">Choose your usual week</span>
+      </div>
+      <div class="activity-bars" id="activity-bars" role="radiogroup" aria-label="Activity level">
+        <button class="activity-level" type="button" data-activity="1.2" role="radio" aria-checked="false" tabindex="-1" aria-label="Sedentary: little exercise">
+          <span class="activity-visual"><span class="activity-fill"></span></span><span class="activity-name">Sedentary</span>
+        </button>
+        <button class="activity-level active" type="button" data-activity="1.375" role="radio" aria-checked="true" tabindex="0" aria-label="Light: exercise 1 to 3 days a week">
+          <span class="activity-visual"><span class="activity-fill"></span></span><span class="activity-name">Light</span>
+        </button>
+        <button class="activity-level" type="button" data-activity="1.55" role="radio" aria-checked="false" tabindex="-1" aria-label="Moderate: exercise 3 to 5 days a week">
+          <span class="activity-visual"><span class="activity-fill"></span></span><span class="activity-name">Moderate</span>
+        </button>
+        <button class="activity-level" type="button" data-activity="1.725" role="radio" aria-checked="false" tabindex="-1" aria-label="Active: exercise 6 to 7 days a week">
+          <span class="activity-visual"><span class="activity-fill"></span></span><span class="activity-name">Active</span>
+        </button>
+        <button class="activity-level" type="button" data-activity="1.9" role="radio" aria-checked="false" tabindex="-1" aria-label="Very active: physical job and training">
+          <span class="activity-visual"><span class="activity-fill"></span></span><span class="activity-name">Very active</span>
+        </button>
+      </div>
+      <select id="activity" class="visually-hidden" tabindex="-1" aria-hidden="true">
+        <option value="1.2">Sedentary</option>
+        <option value="1.375" selected>Light</option>
+        <option value="1.55">Moderate</option>
+        <option value="1.725">Active</option>
+        <option value="1.9">Very active</option>
+      </select>
+    </div>
+
+    <p class="form-feedback error" id="step1-error" role="alert" tabindex="-1" hidden></p>
+    <button class="calc-btn" id="step1-btn" type="button">Continue to my target</button>
   </div>
 
   <div id="step1-results" hidden>
+    <div class="step-label step2-heading"><span class="step-num">2</span> Set your target</div>
     <div class="dash-grid">
       <div class="panel">
         <h2>Your BMI</h2>
@@ -107,17 +148,17 @@
   </div>
 
   <div class="intake" id="step2-card" hidden>
-    <div class="step-label"><span class="step-num">2</span> Set your target</div>
-
     <div class="intake-row2">
-      <div class="dual-unit-row" style="margin-top:0;">
-        <div class="field">
-          <label for="target-kg">Target weight <span class="hint">kg</span></label>
+      <div class="field">
+        <div class="field-label-row">
+          <label for="target-kg">Target weight <span class="hint" id="target-unit-label">kg</span></label>
+          <button class="inline-unit-toggle" id="target-unit-toggle" type="button" aria-pressed="false">Use lb</button>
+        </div>
+        <div id="target-metric-wrap">
           <input type="number" id="target-kg" value="74" min="20" max="250" step="0.1" inputmode="decimal">
         </div>
-        <div class="field">
-          <label for="target-lb">Target weight <span class="hint">lb</span></label>
-          <input type="number" id="target-lb" value="163" min="44" max="550" step="0.1" inputmode="decimal">
+        <div id="target-imperial-wrap" hidden>
+          <input type="number" id="target-lb" value="163" min="44" max="551.2" step="0.1" inputmode="decimal" aria-label="Target weight in pounds">
         </div>
       </div>
       <div class="field">
@@ -131,26 +172,43 @@
       </div>
     </div>
 
-    <div class="cuisine-block">
-      <label class="cuisine-label">Meal style <span class="hint">pick one or more cuisines — leave all off for the full mix</span></label>
-      <div class="cuisine-chips" id="cuisine-chips" role="group" aria-label="Cuisine filters">
-        <button type="button" class="cuisine-chip" data-cuisine="western">Western</button>
-        <button type="button" class="cuisine-chip" data-cuisine="asian">Asian</button>
-        <button type="button" class="cuisine-chip" data-cuisine="ph">PH local</button>
-        <button type="button" class="cuisine-chip" data-cuisine="halal">Halal</button>
-        <button type="button" class="cuisine-chip" data-cuisine="kosher">Kosher</button>
+    <details class="advanced-options">
+      <summary>Customize meal preferences</summary>
+      <div class="advanced-options-body target-options">
+        <div class="cuisine-block">
+          <label class="cuisine-label">Meal style <span class="hint">leave all off for the full mix</span></label>
+          <div class="cuisine-chips" id="cuisine-chips" role="group" aria-label="Cuisine filters">
+            <button type="button" class="cuisine-chip" data-cuisine="western">Western</button>
+            <button type="button" class="cuisine-chip" data-cuisine="asian">Asian</button>
+            <button type="button" class="cuisine-chip" data-cuisine="ph">PH local</button>
+            <button type="button" class="cuisine-chip" data-cuisine="halal">Halal</button>
+            <button type="button" class="cuisine-chip" data-cuisine="kosher">Kosher</button>
+          </div>
+          <label class="cuisine-label dietary-label">Dietary preference</label>
+          <div class="cuisine-chips" id="diet-chips" role="group" aria-label="Dietary filters">
+            <button type="button" class="cuisine-chip diet-chip" data-diet="seafoodfree">Seafood-free</button>
+          </div>
+        </div>
       </div>
-      <label class="cuisine-label" style="margin-top:14px;">Dietary</label>
-      <div class="cuisine-chips" id="diet-chips" role="group" aria-label="Dietary filters">
-        <button type="button" class="cuisine-chip diet-chip" data-diet="seafoodfree">Seafood-free</button>
-      </div>
-    </div>
+      <button class="text-action" id="edit-numbers-btn" type="button">Change my starting numbers</button>
+    </details>
 
+    <p class="form-feedback error" id="step2-error" role="alert" tabindex="-1" hidden></p>
     <button class="calc-btn" id="calc-btn" type="button">Generate my 7-day meal plan</button>
   </div>
 
   <div id="results" hidden>
-    <div class="dash-grid">
+    <div class="step-label step3-heading"><span class="step-num">3</span> Follow your meal plan</div>
+    <div class="plan-header">
+      <div>
+        <h2>7-day meal plan</h2>
+        <div class="plan-sub" id="plan-sub">21 meals built to your daily target</div>
+      </div>
+    </div>
+
+    <details class="plan-calculations">
+      <summary>How this plan was calculated</summary>
+      <div class="dash-grid calculation-grid">
       <div class="panel">
         <h2>Daily targets</h2>
         <ul class="stat-list">
@@ -176,34 +234,45 @@
         </ul>
         <div class="warn" id="target-warn" hidden></div>
       </div>
-    </div>
-
-    <div class="plan-header">
-      <div>
-        <h2>7-day meal plan</h2>
-        <div class="plan-sub" id="plan-sub">21 meals built to your daily target</div>
       </div>
-      <div class="plan-actions">
-        <button class="regen-btn" id="regen-btn" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-          Shuffle meals
-        </button>
-        <button class="regen-btn pdf-btn" id="pdf-btn" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          <span class="pdf-btn-label">Download PDF report</span>
-        </button>
-      </div>
-    </div>
+    </details>
 
+    <div class="day-selector" id="day-selector" role="tablist" aria-label="Choose a day"></div>
     <div class="day-grid" id="day-grid"></div>
+
+    <div class="plan-actions">
+      <div class="download-value">
+        <p class="download-eyebrow">Your complete week, ready to use</p>
+        <h3>Take your <span class="inline-wordmark"><span class="brand-fit">Fit</span><span class="brand-inerary">inerary</span></span> anywhere.</h3>
+        <div class="download-benefits" aria-label="PDF contents">
+          <span><b>7</b> planned days</span>
+          <span><b>21</b> full recipes</span>
+          <span><b>1</b> organized grocery list</span>
+        </div>
+        <p class="download-note">Made for comfortable reading from your phone—at home, in the kitchen, or at the grocery store.</p>
+      </div>
+      <button class="calc-btn pdf-btn" id="pdf-btn" type="button">
+        <svg class="pdf-download-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <span class="pdf-spinner" aria-hidden="true" hidden></span>
+        <span class="pdf-btn-label">Download full plan</span>
+      </button>
+      <p class="pdf-status" id="pdf-status" role="status" aria-live="polite" aria-atomic="true" hidden></p>
+      <details class="plan-options">
+        <summary>Change this plan</summary>
+        <button class="secondary-action" id="regen-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          Generate different meals
+        </button>
+        <button class="text-action" id="edit-plan-btn" type="button">Change my target or preferences</button>
+      </details>
+    </div>
 
     <p class="footnote">For adults 18+. BMI is a screening estimate, not a diagnosis. Maintenance calories use the Mifflin–St Jeor equation plus your selected activity factor; actual needs vary. Recipe calories and macros are planning estimates and vary by brand, cooked yield and preparation. The app will not generate a target below its 1,200 kcal/day female or 1,500 kcal/day male planning floor, but that does not establish medical safety for an individual. Halal and kosher filters screen recipe ingredients only and are not certification. Consult a qualified clinician or dietitian for individual advice.</p>
   </div>
 
-  <div class="app-footer">
-    <span class="app-footer-brand">KELBRIC TECHNOLOGIES</span>
-    <span class="app-footer-links"><span>github.com/kelbrictech</span><span aria-hidden="true">·</span><span>FB: @thetechnaitive</span></span>
-  </div>
+  <footer class="app-footer">
+    <span>All rights reserved.</span>
+  </footer>
 
 </div>
 

@@ -6,8 +6,30 @@
 
   var $ = function(id){ return document.getElementById(id); };
 
-  $("sex-m").addEventListener("click", function(){ sex="m"; $("sex-m").classList.add("active"); $("sex-f").classList.remove("active"); });
-  $("sex-f").addEventListener("click", function(){ sex="f"; $("sex-f").classList.add("active"); $("sex-m").classList.remove("active"); });
+  function setProgress(current){
+    var steps = Array.prototype.slice.call(document.querySelectorAll(".progress-step"));
+    var lines = Array.prototype.slice.call(document.querySelectorAll(".progress-line"));
+    steps.forEach(function(step,index){
+      var number = index + 1;
+      step.classList.toggle("active", number === current);
+      step.classList.toggle("complete", number < current);
+      if (number === current) step.setAttribute("aria-current","step");
+      else step.removeAttribute("aria-current");
+    });
+    lines.forEach(function(line,index){ line.classList.toggle("complete", index < current - 1); });
+  }
+
+  function selectSex(value){
+    sex = value;
+    var maleSelected = value === "m";
+    $("sex-m").classList.toggle("active", maleSelected);
+    $("sex-f").classList.toggle("active", !maleSelected);
+    $("sex-m").setAttribute("aria-pressed", maleSelected ? "true" : "false");
+    $("sex-f").setAttribute("aria-pressed", maleSelected ? "false" : "true");
+  }
+
+  $("sex-m").addEventListener("click", function(){ selectSex("m"); });
+  $("sex-f").addEventListener("click", function(){ selectSex("f"); });
 
   // ---------- dual-unit auto-conversion (cm/ft-in, kg/lb side by side) ----------
   // Each pair keeps both sides in sync as the person types; a small "last edited"
@@ -67,6 +89,62 @@
   linkHeight();
   linkWeightPair("weight-kg","weight-lb");
   linkWeightPair("target-kg","target-lb");
+
+  function setupUnitToggle(buttonId, primaryWrapId, alternateWrapId, unitLabelId, primaryUnit, alternateUnit){
+    var button=$(buttonId), primary=$(primaryWrapId), alternate=$(alternateWrapId), unitLabel=$(unitLabelId);
+    button.addEventListener("click",function(){
+      var showingAlternate=alternate.hidden;
+      alternate.hidden=!showingAlternate;
+      primary.hidden=showingAlternate;
+      button.setAttribute("aria-pressed",showingAlternate ? "true" : "false");
+      unitLabel.textContent=showingAlternate ? alternateUnit : primaryUnit;
+      button.textContent=showingAlternate ? "Use "+primaryUnit : "Use "+alternateUnit;
+      var firstInput=(showingAlternate ? alternate : primary).querySelector("input");
+      if (firstInput) firstInput.focus();
+    });
+  }
+
+  setupUnitToggle("height-unit-toggle","height-metric-wrap","height-imperial-wrap","height-unit-label","cm","ft/in");
+  setupUnitToggle("weight-unit-toggle","weight-metric-wrap","weight-imperial-wrap","weight-unit-label","kg","lb");
+  setupUnitToggle("target-unit-toggle","target-metric-wrap","target-imperial-wrap","target-unit-label","kg","lb");
+
+  function selectActivity(selected, moveFocus){
+    $("activity").value = selected.getAttribute("data-activity");
+    document.querySelectorAll(".activity-level").forEach(function(option){
+      var isSelected = option === selected;
+      option.classList.toggle("active", isSelected);
+      option.setAttribute("aria-checked", isSelected ? "true" : "false");
+      option.setAttribute("tabindex", isSelected ? "0" : "-1");
+    });
+    if (moveFocus) selected.focus();
+  }
+
+  $("activity-bars").addEventListener("click", function(event){
+    var selected = event.target.closest(".activity-level");
+    if (!selected) return;
+    selectActivity(selected, false);
+  });
+
+  $("activity-bars").addEventListener("keydown", function(event){
+    if (!["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End"].includes(event.key)) return;
+    var options = Array.prototype.slice.call(document.querySelectorAll(".activity-level"));
+    var current = options.indexOf(document.activeElement);
+    if (current < 0) current = options.findIndex(function(option){ return option.getAttribute("aria-checked") === "true"; });
+    var next = current;
+    if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = options.length - 1;
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = (current - 1 + options.length) % options.length;
+    else next = (current + 1) % options.length;
+    event.preventDefault();
+    selectActivity(options[next], true);
+  });
+
+  function setFormError(id, message){
+    var feedback = $(id);
+    feedback.textContent = message || "";
+    feedback.hidden = !message;
+    if (message) feedback.focus();
+  }
 
   function getHeightCm(){ return parseFloat($("height-cm").value) || 0; }
   function getWeightKg(){ return parseFloat($("weight-kg").value) || 0; }
@@ -334,7 +412,9 @@
     var pools = [filterMeals(MEALS.breakfast),filterMeals(MEALS.lunch),filterMeals(MEALS.dinner)];
 
     var grid = $("day-grid");
+    var selector = $("day-selector");
     grid.innerHTML = "";
+    selector.innerHTML = "";
     lastPlanDays = [];
     var priorNames = {};
 
@@ -347,7 +427,23 @@
       var dayRecord = {name: DAY_NAMES[d], meals: []};
 
       var card = document.createElement("div");
-      card.className = "day-card";
+      card.className = "day-card" + (d===0 ? " active" : "");
+      card.id = "day-panel-" + d;
+      card.setAttribute("role", "tabpanel");
+      card.setAttribute("aria-labelledby", "day-tab-" + d);
+      card.hidden = d !== 0;
+
+      var tab = document.createElement("button");
+      tab.type = "button";
+      tab.className = "day-tab" + (d===0 ? " active" : "");
+      tab.id = "day-tab-" + d;
+      tab.setAttribute("role", "tab");
+      tab.setAttribute("aria-selected", d===0 ? "true" : "false");
+      tab.setAttribute("aria-controls", card.id);
+      tab.setAttribute("tabindex", d===0 ? "0" : "-1");
+      tab.setAttribute("data-day", d);
+      tab.textContent = DAY_NAMES[d].slice(0,3);
+      selector.appendChild(tab);
 
       var head = document.createElement("div");
       head.className = "day-card-head";
@@ -392,6 +488,42 @@
     },{p:0,c:0,f:0});
     $("plan-sub").textContent = "Estimated daily average: " + Math.round(targetKcal) + " kcal · P " + Math.round(avg.p/7) + "g · C " + Math.round(avg.c/7) + "g · F " + Math.round(avg.f/7) + "g" + filterNote;
   }
+
+  function selectDayTab(tab, moveFocus){
+    var day = tab.getAttribute("data-day");
+    document.querySelectorAll(".day-tab").forEach(function(option){
+      var selected = option === tab;
+      option.classList.toggle("active", selected);
+      option.setAttribute("aria-selected", selected ? "true" : "false");
+      option.setAttribute("tabindex", selected ? "0" : "-1");
+    });
+    document.querySelectorAll(".day-card").forEach(function(card){
+      var selected = card.id === "day-panel-" + day;
+      card.classList.toggle("active", selected);
+      card.hidden = !selected;
+    });
+    if (moveFocus) tab.focus();
+  }
+
+  $("day-selector").addEventListener("click", function(event){
+    var tab = event.target.closest(".day-tab");
+    if (!tab) return;
+    selectDayTab(tab, false);
+  });
+
+  $("day-selector").addEventListener("keydown", function(event){
+    if (!["ArrowLeft","ArrowRight","Home","End"].includes(event.key)) return;
+    var tabs = Array.prototype.slice.call(document.querySelectorAll(".day-tab"));
+    var current = tabs.indexOf(document.activeElement);
+    if (current < 0) current = 0;
+    var next = current;
+    if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = tabs.length - 1;
+    else if (event.key === "ArrowLeft") next = (current - 1 + tabs.length) % tabs.length;
+    else next = (current + 1) % tabs.length;
+    event.preventDefault();
+    selectDayTab(tabs[next], true);
+  });
 
   // ---------- Grocery list (aggregated from the week's ingredients) ----------
   var GROCERY_CATEGORIES = [
@@ -461,7 +593,8 @@
     html += '<div class="pr-brand-strip"><b>KELBRIC TECHNOLOGIES</b><span>github.com/kelbrictech</span></div>';
 
     html += '<div class="pr-mast">' +
-      '<p class="pr-eyebrow">Fitinerary — your personal diet planner</p>' +
+      '<div class="pr-wordmark"><span class="pr-brand-fit">Fit</span><span class="pr-brand-rest">inerary</span></div>' +
+      '<p class="pr-eyebrow">Your personal diet planner</p>' +
       '<h1 class="pr-title">7-Day Nutrition Plan</h1>' +
       '<p class="pr-sub">Generated ' + new Date().toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"}) + '</p>' +
       '</div>';
@@ -521,25 +654,44 @@
 
     html += '<p class="pr-foot">For adults 18+. BMI is a screening estimate, not a diagnosis. Maintenance calories use the Mifflin–St Jeor equation plus a selected activity factor; actual needs vary. Meal nutrition is estimated from the built-in recipe set and will vary by brand, cooked yield and preparation. The planner does not generate targets below 1,200 kcal/day for women or 1,500 kcal/day for men, but those limits do not establish medical safety for an individual. Halal and kosher tags describe ingredient screening only, not certification. Consult a qualified clinician or dietitian for individual advice.</p>';
 
-    html += '<div class="pr-foot-brand"><b>KELBRIC TECHNOLOGIES</b><br>github.com/kelbrictech &nbsp;·&nbsp; FB: @thetechnaitive</div>';
+    html += '<div class="pr-foot-brand">All rights reserved.</div>';
 
     $("print-report").innerHTML = html;
+  }
+
+  function setPdfStatus(message, tone){
+    var status = $("pdf-status");
+    status.textContent = message || "";
+    status.className = "pdf-status" + (tone ? " " + tone : "");
+    status.hidden = !message;
+    status.setAttribute("role", tone === "error" ? "alert" : "status");
+    status.setAttribute("aria-live", tone === "error" ? "assertive" : "polite");
   }
 
   function setPdfBtnState(busy){
     var btn = $("pdf-btn");
     btn.disabled = busy;
-    btn.style.opacity = busy ? 0.6 : 1;
-    btn.querySelector(".pdf-btn-label").textContent = busy ? "Preparing PDF…" : "Download PDF report";
+    btn.setAttribute("aria-busy", busy ? "true" : "false");
+    btn.querySelector(".pdf-download-icon").hidden = busy;
+    btn.querySelector(".pdf-spinner").hidden = !busy;
+    btn.querySelector(".pdf-btn-label").textContent = busy ? "Preparing PDF…" : "Download full plan";
   }
 
   $("pdf-btn").addEventListener("click", function(){
+    setPdfStatus("", "");
     if (typeof html2canvas === "undefined" || !window.jspdf){
-      alert("PDF export couldn't load its required library. Check your connection and try again.");
+      setPdfStatus("We couldn’t create your PDF because the download tools did not load. Check your connection and try again.", "error");
       return;
     }
     setPdfBtnState(true);
-    buildPrintReport();
+    try{
+      buildPrintReport();
+    } catch(err){
+      console.error(err);
+      setPdfBtnState(false);
+      setPdfStatus("We couldn’t prepare your PDF. Please try again.", "error");
+      return;
+    }
 
     var node = $("print-report");
     // let the browser lay out the off-canvas node before capturing it
@@ -552,24 +704,26 @@
         var imgData = canvas.toDataURL("image/jpeg", 0.92);
         pdf.addImage(imgData, "JPEG", 0, 0, pageWidthMm, pageHeightMm);
         pdf.save("fitinerary-7-day-plan.pdf");
-        setPdfBtnState(false);
+        setPdfStatus("Your Fitinerary PDF has been downloaded.", "success");
       }).catch(function(err){
         console.error(err);
-        alert("PDF export failed. Please try again.");
+        setPdfStatus("We couldn’t create your PDF. Please try again.", "error");
+      }).finally(function(){
         setPdfBtnState(false);
       });
     }, 50);
   });
 
   $("regen-btn").addEventListener("click", function(){
+    setPdfStatus("", "");
     buildPlan(lastTargetKcal, lastMacros);
   });
 
   // ---------- calculation ----------
   function classifyBMI(bmi){
-    if (bmi < 18.5) return {label:"Underweight", color:"#5D84A8", bg:"#E3ECF4"};
-    if (bmi < 25) return {label:"Healthy", color:"var(--sage-deep)", bg:"var(--sage-tint)"};
-    if (bmi < 30) return {label:"Overweight", color:"var(--coral-deep)", bg:"var(--coral-tint)"};
+    if (bmi < 18.5) return {label:"Underweight", color:"#426B8E", bg:"#E3ECF4"};
+    if (bmi < 25) return {label:"Healthy", color:"var(--sage-ink)", bg:"var(--sage-tint)"};
+    if (bmi < 30) return {label:"Overweight", color:"var(--coral-ink)", bg:"var(--coral-tint)"};
     return {label:"Obesity", color:"var(--danger)", bg:"var(--coral-tint)"};
   }
 
@@ -584,13 +738,24 @@
 
   // ---------- Step 1: BMI & recommended weight ----------
   $("step1-btn").addEventListener("click", function(){
-    var age = parseFloat($("age").value) || 30;
+    setFormError("step1-error", "");
+    var age = parseFloat($("age").value);
     var heightCm = getHeightCm();
     var weightKg = getWeightKg();
     var activity = parseFloat($("activity").value);
 
-    if (age<18){ alert("Fitinerary currently supports adults age 18 and older."); return; }
-    if (!heightCm || !weightKg) return;
+    if (!Number.isFinite(age) || age < 18 || age > 90){
+      setFormError("step1-error", "Enter an age from 18 to 90. Fitinerary currently supports adults only.");
+      return;
+    }
+    if (!Number.isFinite(heightCm) || heightCm < 90 || heightCm > 230){
+      setFormError("step1-error", "Enter a height from 90 to 230 cm (about 2 ft 11 in to 7 ft 7 in).");
+      return;
+    }
+    if (!Number.isFinite(weightKg) || weightKg < 20 || weightKg > 250){
+      setFormError("step1-error", "Enter a current weight from 20 to 250 kg (about 44 to 551 lb).");
+      return;
+    }
 
     lastHeightCm = heightCm; lastWeightKg = weightKg; lastAge = age; lastActivity = activity;
 
@@ -633,13 +798,24 @@
 
     $("step1-results").hidden = false;
     $("step2-card").hidden = false;
+    $("step1-card").hidden = true;
+    $("results").hidden = true;
+    setProgress(2);
     $("step1-results").scrollIntoView({behavior:"smooth", block:"start"});
   });
 
   // ---------- Step 2: target weight → meal plan ----------
   $("calc-btn").addEventListener("click", function(){
+    setFormError("step2-error", "");
     var targetKg = getTargetKg();
-    if (!lastHeightCm || !lastWeightKg || !targetKg) return;
+    if (!lastHeightCm || !lastWeightKg){
+      setFormError("step2-error", "Return to step 1 and enter your starting numbers first.");
+      return;
+    }
+    if (!Number.isFinite(targetKg) || targetKg < 20 || targetKg > 250){
+      setFormError("step2-error", "Enter a target weight from 20 to 250 kg (about 44 to 551 lb).");
+      return;
+    }
 
     var heightCm = lastHeightCm, weightKg = lastWeightKg, age = lastAge, activity = lastActivity;
     var pace = parseFloat($("pace").value);
@@ -650,8 +826,14 @@
     var kgToLose = weightKg - targetKg;
     var targetWarnEl = $("target-warn");
     if (kgToLose < 0){
-      targetWarnEl.hidden = false;
-      targetWarnEl.innerHTML = "<strong>Target not generated —</strong> this version calculates weight-loss or maintenance plans only. Enter a target at or below your current weight.";
+      targetWarnEl.hidden = true;
+      setFormError("step2-error", "This version creates weight-loss or maintenance plans only. Enter a target at or below your current weight.");
+      $("results").hidden = true;
+      return;
+    }
+    if (targetBmi < 18.5){
+      targetWarnEl.hidden = true;
+      setFormError("step2-error", "That target is below the general adult BMI reference range. Choose at least " + round1(18.5 * heightM * heightM) + " kg, or ask a qualified clinician or dietitian for an individual plan.");
       $("results").hidden = true;
       return;
     }
@@ -708,12 +890,29 @@
     }
 
     $("results").hidden = false;
+    setPdfStatus("", "");
     buildPlan(targetKcal, lastMacros);
+    $("step1-results").hidden = true;
+    $("step2-card").hidden = true;
+    setProgress(3);
     $("results").scrollIntoView({behavior:"smooth", block:"start"});
   });
 
-  // run once with the pre-filled example values so the page opens in a working state
-  $("step1-btn").click();
-  $("calc-btn").click();
+  $("edit-numbers-btn").addEventListener("click", function(){
+    $("step1-card").hidden = false;
+    $("step1-results").hidden = true;
+    $("step2-card").hidden = true;
+    $("results").hidden = true;
+    setProgress(1);
+    $("step1-card").scrollIntoView({behavior:"smooth",block:"start"});
+  });
+
+  $("edit-plan-btn").addEventListener("click", function(){
+    $("step1-results").hidden = false;
+    $("step2-card").hidden = false;
+    $("results").hidden = true;
+    setProgress(2);
+    $("step1-results").scrollIntoView({behavior:"smooth",block:"start"});
+  });
 
 })();
