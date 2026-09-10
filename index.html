@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fitinerary — Your Personal Diet Planner</title>
+<meta name="description" content="Fitinerary computes your BMI and recommended weight, then generates a full 7-day, 21-meal plan with cuisine filters, recipes, a grocery list, and a downloadable PDF report.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div>
+      <p class="brand-eyebrow">Fitinerary — your personal diet planner</p>
+      <h1>Fitinerary</h1>
+      <p>Step one: get your BMI and a recommended weight range. Step two: set a target and generate the 7-day plan.</p>
+    </div>
+  </div>
+
+  <div class="intake">
+    <div class="step-label"><span class="step-num">1</span> Your numbers</div>
+
+    <div class="intake-grid">
+      <div class="field">
+        <label for="age">Age <span class="hint">years</span></label>
+        <input type="number" id="age" value="32" min="18" max="90" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label>Sex <span class="hint">for BMR calc</span></label>
+        <div class="sex-pair">
+          <button type="button" id="sex-m" class="active">Male</button>
+          <button type="button" id="sex-f">Female</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="activity">Activity level</label>
+        <select id="activity">
+          <option value="1.2">Sedentary — desk job, little exercise</option>
+          <option value="1.375" selected>Light — exercise 1–3 days/wk</option>
+          <option value="1.55">Moderate — exercise 3–5 days/wk</option>
+          <option value="1.725">Active — exercise 6–7 days/wk</option>
+          <option value="1.9">Very active — physical job + training</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="dual-unit-row">
+      <div class="field">
+        <label for="height-cm">Height <span class="hint">cm</span></label>
+        <input type="number" id="height-cm" value="171" min="90" max="230" step="0.1" inputmode="decimal">
+      </div>
+      <div class="field dual-pair">
+        <label>Height <span class="hint">ft / in</span></label>
+        <div class="dual-pair-inputs">
+          <input type="number" id="height-ft" value="5" min="2" max="7" inputmode="numeric">
+          <input type="number" id="height-in" value="7" min="0" max="11" inputmode="numeric">
+        </div>
+      </div>
+    </div>
+
+    <div class="dual-unit-row">
+      <div class="field">
+        <label for="weight-kg">Current weight <span class="hint">kg</span></label>
+        <input type="number" id="weight-kg" value="82" min="20" max="250" step="0.1" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label for="weight-lb">Current weight <span class="hint">lb</span></label>
+        <input type="number" id="weight-lb" value="181" min="44" max="550" step="0.1" inputmode="decimal">
+      </div>
+    </div>
+
+    <button class="calc-btn" id="step1-btn" type="button">Compute BMI &amp; recommended weight</button>
+  </div>
+
+  <div id="step1-results" hidden>
+    <div class="dash-grid">
+      <div class="panel">
+        <h2>Your BMI</h2>
+        <div class="bmi-readout">
+          <span class="bmi-num" id="bmi-value">–</span>
+          <span class="bmi-cat" id="bmi-cat">–</span>
+        </div>
+        <div class="bmi-sub" id="bmi-target-sub">Adult BMI reference range: 18.5–24.9</div>
+        <div class="bmi-scale">
+          <div class="bmi-marker" id="bmi-marker" style="left:0%"></div>
+        </div>
+        <div class="bmi-scale-labels">
+          <span>15</span><span>18.5</span><span>25</span><span>30</span><span>40</span>
+        </div>
+        <div class="warn" id="bmi-warn" hidden></div>
+      </div>
+
+      <div class="panel">
+        <h2>BMI reference weight</h2>
+        <ul class="stat-list">
+          <li><span class="label">BMI reference range</span><span class="val pine" id="stat-range">–</span></li>
+          <li><span class="label">Reference midpoint</span><span class="val accent" id="stat-midpoint">–</span></li>
+          <li><span class="label">Estimated maintenance</span><span class="val" id="stat-tdee">–</span></li>
+        </ul>
+        <p class="range-note">This adult reference range translates BMI 18.5–24.9 to your height. BMI is a screening measure and does not diagnose health or measure body composition.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="intake" id="step2-card" hidden>
+    <div class="step-label"><span class="step-num">2</span> Set your target</div>
+
+    <div class="intake-row2">
+      <div class="dual-unit-row" style="margin-top:0;">
+        <div class="field">
+          <label for="target-kg">Target weight <span class="hint">kg</span></label>
+          <input type="number" id="target-kg" value="74" min="20" max="250" step="0.1" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label for="target-lb">Target weight <span class="hint">lb</span></label>
+          <input type="number" id="target-lb" value="163" min="44" max="550" step="0.1" inputmode="decimal">
+        </div>
+      </div>
+      <div class="field">
+        <label for="pace">Weekly pace</label>
+        <select id="pace">
+          <option value="0.25">Gentle — 0.25 kg/wk</option>
+          <option value="0.5" selected>Moderate — 0.5 kg/wk</option>
+          <option value="0.75">Brisk — 0.75 kg/wk</option>
+          <option value="1">Aggressive — 1 kg/wk</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="cuisine-block">
+      <label class="cuisine-label">Meal style <span class="hint">pick one or more cuisines — leave all off for the full mix</span></label>
+      <div class="cuisine-chips" id="cuisine-chips" role="group" aria-label="Cuisine filters">
+        <button type="button" class="cuisine-chip" data-cuisine="western">Western</button>
+        <button type="button" class="cuisine-chip" data-cuisine="asian">Asian</button>
+        <button type="button" class="cuisine-chip" data-cuisine="ph">PH local</button>
+        <button type="button" class="cuisine-chip" data-cuisine="halal">Halal</button>
+        <button type="button" class="cuisine-chip" data-cuisine="kosher">Kosher</button>
+      </div>
+      <label class="cuisine-label" style="margin-top:14px;">Dietary</label>
+      <div class="cuisine-chips" id="diet-chips" role="group" aria-label="Dietary filters">
+        <button type="button" class="cuisine-chip diet-chip" data-diet="seafoodfree">Seafood-free</button>
+      </div>
+    </div>
+
+    <button class="calc-btn" id="calc-btn" type="button">Generate my 7-day meal plan</button>
+  </div>
+
+  <div id="results" hidden>
+    <div class="dash-grid">
+      <div class="panel">
+        <h2>Daily targets</h2>
+        <ul class="stat-list">
+          <li><span class="label">Estimated maintenance</span><span class="val" id="stat-tdee2">–</span></li>
+          <li><span class="label">Weekly pace</span><span class="val" id="stat-pace">–</span></li>
+          <li><span class="label">Daily calorie target</span><span class="val accent" id="stat-target">–</span></li>
+          <li><span class="label">Est. weeks to goal</span><span class="val pine" id="stat-weeks">–</span></li>
+        </ul>
+        <p class="range-note">General macro planning guide (25% protein / 45% carbohydrate / 30% fat); your generated meals show their estimated actual average.</p>
+        <div class="macro-strip">
+          <div class="macro-chip"><span class="n" id="macro-p">–</span><span class="l">Protein g</span></div>
+          <div class="macro-chip"><span class="n" id="macro-c">–</span><span class="l">Carbs g</span></div>
+          <div class="macro-chip"><span class="n" id="macro-f">–</span><span class="l">Fat g</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Your target vs. BMI</h2>
+        <ul class="stat-list">
+          <li><span class="label">Current weight</span><span class="val" id="stat-current-w">–</span></li>
+          <li><span class="label">Target weight</span><span class="val accent" id="stat-target-w">–</span></li>
+          <li><span class="label">BMI at target</span><span class="val pine" id="stat-target-bmi">–</span></li>
+        </ul>
+        <div class="warn" id="target-warn" hidden></div>
+      </div>
+    </div>
+
+    <div class="plan-header">
+      <div>
+        <h2>7-day meal plan</h2>
+        <div class="plan-sub" id="plan-sub">21 meals built to your daily target</div>
+      </div>
+      <div class="plan-actions">
+        <button class="regen-btn" id="regen-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          Shuffle meals
+        </button>
+        <button class="regen-btn pdf-btn" id="pdf-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span class="pdf-btn-label">Download PDF report</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="day-grid" id="day-grid"></div>
+
+    <p class="footnote">For adults 18+. BMI is a screening estimate, not a diagnosis. Maintenance calories use the Mifflin–St Jeor equation plus your selected activity factor; actual needs vary. Recipe calories and macros are planning estimates and vary by brand, cooked yield and preparation. The app will not generate a target below its 1,200 kcal/day female or 1,500 kcal/day male planning floor, but that does not establish medical safety for an individual. Halal and kosher filters screen recipe ingredients only and are not certification. Consult a qualified clinician or dietitian for individual advice.</p>
+  </div>
+
+  <div class="app-footer">
+    <span class="app-footer-brand">KELBRIC TECHNOLOGIES</span>
+    <span class="app-footer-links"><span>github.com/kelbrictech</span><span aria-hidden="true">·</span><span>FB: @thetechnaitive</span></span>
+  </div>
+
+</div>
+
+<div id="print-report" aria-hidden="true"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
