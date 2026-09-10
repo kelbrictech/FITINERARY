@@ -1,0 +1,22 @@
+{
+  "name": "fitinerary",
+  "version": "1.0.0",
+  "description": "Fitinerary — your personal diet planner. Computes BMI and a recommended weight range, then generates a 7-day, 21-meal plan with cuisine filters, recipes, a grocery list, and a downloadable PDF report.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "bmi",
+    "meal-plan",
+    "diet",
+    "nutrition",
+    "calorie-calculator"
+  ],
+  "author": "KELBRIC Technologies",
+  "license": "UNLICENSED",
+  "homepage": "https://github.com/kelbrictech",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
